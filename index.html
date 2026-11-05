@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Typing Challenge Game - CSC336 Lab Mid</title>
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-light">
+
+  <!-- Main Navigation / Header -->
+  <header class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm mb-4">
+    <div class="container">
+      <span class="navbar-brand fw-bold fs-4">Typing Challenge Game</span>
+      <span class="badge bg-light text-primary fs-6">CSC336 Web Technologies</span>
+    </div>
+  </header>
+
+  <main class="container mb-5">
+    
+    <!-- 1. HOME SCREEN / MODE SELECTION -->
+    <section id="screen-home" class="view-screen">
+      <div class="text-center mb-4">
+        <h1 class="fw-bold">Select Game Mode</h1>
+        <p class="text-secondary">Improve your typing speed, letter recognition, and keyboard precision.</p>
+      </div>
+
+      <div class="row g-4 justify-content-center">
+        <!-- Card Mode A -->
+        <div class="col-md-5">
+          <div class="card h-100 shadow-sm border-0 mode-card text-center p-3">
+            <div class="card-body d-flex flex-column">
+              <div class="display-5 text-primary mb-3">🫧</div>
+              <h3 class="card-title fw-bold">Mode A: Bubbles</h3>
+              <p class="card-text text-muted flex-grow-1">
+                Letters float upward in bubbles. Pop them by pressing the matching key before they reach the top!
+              </p>
+              <div class="mb-3 text-start bg-light p-2 rounded small">
+                <strong>Features:</strong>
+                <ul class="mb-0 ps-3">
+                  <li>At least 5 floating bubbles at once</li>
+                  <li>Miss limit: 6 misses max</li>
+                  <li>Penalty on incorrect keypress</li>
+                  <li>Dynamic speed progression</li>
+                </ul>
+              </div>
+              <button class="btn btn-primary btn-lg w-100" onclick="app.showModeSetup('bubbles')">Play Bubbles</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card Mode B -->
+        <div class="col-md-5">
+          <div class="card h-100 shadow-sm border-0 mode-card text-center p-3">
+            <div class="card-body d-flex flex-column">
+              <div class="display-5 text-success mb-3">🎯</div>
+              <h3 class="card-title fw-bold">Mode B: KeyMagnet</h3>
+              <p class="card-text text-muted flex-grow-1">
+                Keyboard precision drill. Hit target keys on a responsive virtual keyboard layout as fast as you can.
+              </p>
+              <div class="mb-3 text-start bg-light p-2 rounded small">
+                <strong>Features:</strong>
+                <ul class="mb-0 ps-3">
+                  <li>Selectable Key Sets (Home Row, Numbers, All)</li>
+                  <li>Tracks average response time (ms)</li>
+                  <li>Visual key highlight & feedback</li>
+                  <li>Timed precision challenge</li>
+                </ul>
+              </div>
+              <button class="btn btn-success btn-lg w-100" onclick="app.showModeSetup('keymagnet')">Play KeyMagnet</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. SETUP SCREEN (Difficulty & Key set selection) -->
+    <section id="screen-setup" class="view-screen d-none">
+      <div class="row justify-content-center">
+        <div class="col-md-7 col-lg-6">
+          <div class="card shadow border-0 p-4">
+            <h2 id="setup-title" class="fw-bold mb-3 text-center">Configure Game</h2>
+            <p id="setup-desc" class="text-muted text-center"></p>
+
+            <div class="mb-3">
+              <label class="form-label fw-bold">Select Difficulty:</label>
+              <div class="btn-group w-100" role="group">
+                <input type="radio" class="btn-check" name="difficulty" id="diff-easy" value="easy" checked>
+                <label class="btn btn-outline-success" for="diff-easy">Easy</label>
+
+                <input type="radio" class="btn-check" name="difficulty" id="diff-medium" value="medium">
+                <label class="btn btn-outline-warning" for="diff-medium">Medium</label>
+
+                <input type="radio" class="btn-check" name="difficulty" id="diff-hard" value="hard">
+                <label class="btn btn-outline-danger" for="diff-hard">Hard</label>
+              </div>
+              <div class="form-text mt-1" id="difficulty-hint">
+                Easy: Slower pace, generous timing.
+              </div>
+            </div>
+
+            <!-- Mode B extra option: Key Set -->
+            <div class="mb-4 d-none" id="keyset-group">
+              <label class="form-label fw-bold">Select Key Set (Practice Set):</label>
+              <select class="form-select" id="keyset-select">
+                <option value="homerow">Home Row (A, S, D, F, J, K, L)</option>
+                <option value="toprow">Top Row (Q, W, E, R, T, Y, U, I, O, P)</option>
+                <option value="numbers">Numbers (0-9)</option>
+                <option value="all">Full Alphabet (A-Z)</option>
+              </select>
+            </div>
+
+            <div class="d-flex gap-2">
+              <button class="btn btn-outline-secondary w-50" onclick="app.showHome()">Back to Home</button>
+              <button class="btn btn-primary w-50" id="btn-start-game" onclick="app.startGame()">Start Game</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. GAMEPLAY SCREEN: MODE A (BUBBLES) -->
+    <section id="screen-game-bubbles" class="view-screen d-none">
+      <!-- Status Dashboard -->
+      <div class="card shadow-sm border-0 mb-3 p-3 bg-white">
+        <div class="row text-center g-2 align-items-center">
+          <div class="col-4 col-md-2">
+            <span class="text-muted small d-block">Score</span>
+            <span class="fs-4 fw-bold text-primary" id="bubble-score">0</span>
+          </div>
+          <div class="col-4 col-md-2">
+            <span class="text-muted small d-block">Misses</span>
+            <span class="fs-4 fw-bold text-danger"><span id="bubble-misses">0</span> / 6</span>
+          </div>
+          <div class="col-4 col-md-2">
+            <span class="text-muted small d-block">Difficulty</span>
+            <span class="badge bg-info text-dark fs-6 text-capitalize" id="bubble-diff-badge">Easy</span>
+          </div>
+          <div class="col-6 col-md-2">
+            <span class="text-muted small d-block">Popped</span>
+            <span class="fs-5 fw-semibold text-success" id="bubble-popped">0</span>
+          </div>
+          <div class="col-6 col-md-4 d-flex justify-content-end gap-2">
+            <button class="btn btn-sm btn-outline-warning" onclick="app.restartCurrentGame()">Restart</button>
+            <button class="btn btn-sm btn-outline-danger" onclick="app.resetToHome()">Reset (Exit)</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bubble Game Arena -->
+      <div id="bubble-arena" class="position-relative overflow-hidden rounded border border-2 shadow-inner bg-dark">
+        <div id="bubble-feedback-overlay" class="feedback-overlay"></div>
+        <div id="bubble-container"></div>
+      </div>
+      <p class="text-center text-muted small mt-2">Type the visible letter on your keyboard to pop the bubble. Wrong key = -5 score!</p>
+    </section>
+
+    <!-- 4. GAMEPLAY SCREEN: MODE B (KEYMAGNET) -->
+    <section id="screen-game-keymagnet" class="view-screen d-none">
+      <!-- Status Dashboard -->
+      <div class="card shadow-sm border-0 mb-3 p-3 bg-white">
+        <div class="row text-center g-2 align-items-center">
+          <div class="col-4 col-md-2">
+            <span class="text-muted small d-block">Score</span>
+            <span class="fs-4 fw-bold text-success" id="km-score">0</span>
+          </div>
+          <div class="col-4 col-md-2">
+            <span class="text-muted small d-block">Time Left</span>
+            <span class="fs-4 fw-bold text-warning" id="km-timer">30s</span>
+          </div>
+          <div class="col-4 col-md-2">
+            <span class="text-muted small d-block">Accuracy</span>
+            <span class="fs-4 fw-bold text-info" id="km-accuracy">100%</span>
+          </div>
+          <div class="col-6 col-md-2">
+            <span class="text-muted small d-block">Avg Response</span>
+            <span class="fs-5 fw-semibold text-secondary" id="km-avg-time">0 ms</span>
+          </div>
+          <div class="col-6 col-md-4 d-flex justify-content-end gap-2">
+            <button class="btn btn-sm btn-outline-warning" onclick="app.restartCurrentGame()">Restart</button>
+            <button class="btn btn-sm btn-outline-danger" onclick="app.resetToHome()">Reset (Exit)</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- KeyMagnet Target Display & Keyboard Layout -->
+      <div class="card shadow-sm border-0 p-4 text-center bg-white">
+        <div class="mb-2 text-muted fw-semibold">PRESS THIS KEY:</div>
+        <div id="km-target-display" class="target-key-box mx-auto shadow mb-4">
+          <span id="km-target-char">-</span>
+        </div>
+        <div id="km-feedback-text" class="fw-bold mb-3 fs-5" style="min-height: 28px;">&nbsp;</div>
+
+        <!-- Virtual Keyboard Panel -->
+        <div id="virtual-keyboard" class="mx-auto">
+          <!-- Row 1: Numbers -->
+          <div class="kb-row">
+            <div class="key" data-key="1">1</div>
+            <div class="key" data-key="2">2</div>
+            <div class="key" data-key="3">3</div>
+            <div class="key" data-key="4">4</div>
+            <div class="key" data-key="5">5</div>
+            <div class="key" data-key="6">6</div>
+            <div class="key" data-key="7">7</div>
+            <div class="key" data-key="8">8</div>
+            <div class="key" data-key="9">9</div>
+            <div class="key" data-key="0">0</div>
+          </div>
+          <!-- Row 2: Top Row -->
+          <div class="kb-row">
+            <div class="key" data-key="Q">Q</div>
+            <div class="key" data-key="W">W</div>
+            <div class="key" data-key="E">E</div>
+            <div class="key" data-key="R">R</div>
+            <div class="key" data-key="T">T</div>
+            <div class="key" data-key="Y">Y</div>
+            <div class="key" data-key="U">U</div>
+            <div class="key" data-key="I">I</div>
+            <div class="key" data-key="O">O</div>
+            <div class="key" data-key="P">P</div>
+          </div>
+          <!-- Row 3: Home Row -->
+          <div class="kb-row">
+            <div class="key home-key" data-key="A">A</div>
+            <div class="key home-key" data-key="S">S</div>
+            <div class="key home-key" data-key="D">D</div>
+            <div class="key home-key" data-key="F">F</div>
+            <div class="key" data-key="G">G</div>
+            <div class="key" data-key="H">H</div>
+            <div class="key home-key" data-key="J">J</div>
+            <div class="key home-key" data-key="K">K</div>
+            <div class="key home-key" data-key="L">L</div>
+          </div>
+          <!-- Row 4: Bottom Row -->
+          <div class="kb-row">
+            <div class="key" data-key="Z">Z</div>
+            <div class="key" data-key="X">X</div>
+            <div class="key" data-key="C">C</div>
+            <div class="key" data-key="V">V</div>
+            <div class="key" data-key="B">B</div>
+            <div class="key" data-key="N">N</div>
+            <div class="key" data-key="M">M</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. RESULTS SCREEN -->
+    <section id="screen-results" class="view-screen d-none">
+      <div class="row justify-content-center">
+        <div class="col-md-7 col-lg-6">
+          <div class="card shadow-lg border-0 text-center p-4">
+            <div class="mb-3">
+              <span id="results-icon" class="display-3">🏆</span>
+            </div>
+            <h2 id="results-title" class="fw-bold mb-1">Session Complete!</h2>
+            <p id="results-subtitle" class="text-muted mb-4"></p>
+
+            <div class="table-responsive mb-4">
+              <table class="table table-bordered mb-0">
+                <tbody id="results-table-body">
+                  <!-- Dynamically populated stats -->
+                </tbody>
+              </table>
+            </div>
+
+            <div class="d-flex gap-2">
+              <button class="btn btn-outline-secondary w-50" onclick="app.showHome()">Mode Selection</button>
+              <button class="btn btn-primary w-50" onclick="app.restartCurrentGame()">Play Again</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="text-center text-muted small py-3 mt-auto">
+    COMSATS University Islamabad, Vehari Campus &bull; CSC336 Lab Mid Fall-2026
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
